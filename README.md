@@ -26,6 +26,7 @@ v1.13.2怀旧服
 - [Questie](https://www.curseforge.com/wow/addons/questie) 任务增强，在地图上显示任务目标和可接任务等。
 - [QuestLogEx](https://www.wowinterface.com/downloads/info24980-QuestLogEx.html) 将任务列表和任务详情展示在一个面板上，就像正式服。
 - [RealMobHealth](https://www.wowinterface.com/downloads/info24924-RealMobHealth.html) 显示怪物真实（不完全正确）血量，原理是根据伤害和百分比计算出来的，并在玩家间共享，用的时间越长应该越正确。
+- [tullaRange](https://www.curseforge.com/wow/addons/tullarange) 技能icon超出距离和魔法不足着色。
 - [WeakAuras](https://www.curseforge.com/wow/addons/weakauras-2) 包含的功能较多，还没用明白。
 - [WeaponSwingTimer](https://www.curseforge.com/wow/addons/weaponswingtimer) 平A主副手武器CD监控。
 - [WhatsTraining](https://www.wowinterface.com/downloads/info25031-WhatsTraining.html) 技能书增加一个tab，告诉你哪些技能什么等级可学，不用造访技能训练师就能知道，方便练级时使用。
