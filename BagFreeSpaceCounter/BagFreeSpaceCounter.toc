@@ -1,0 +1,7 @@
+## Interface: 11302
+## Version: 1.0.2
+## Title: BagFreeSpaceCounter
+## Notes: Displays the amount of unused inventory space
+## Author: Bytespire
+
+BagFreeSpaceCounter.lua
