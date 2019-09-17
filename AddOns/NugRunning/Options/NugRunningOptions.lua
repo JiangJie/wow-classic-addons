@@ -1,5 +1,6 @@
 NugRunningGUI = CreateFrame("Frame","NugRunningGUI")
 local NugRunning = NugRunning
+local L = NugRunning.L
 
 -- NugRunningGUI:SetScript("OnEvent", function(self, event, ...)
 	-- self[event](self, event, ...)
@@ -30,7 +31,7 @@ function NugRunningGUI.GenerateCategoryTree(self, isGlobal, category)
 	local t = {}
 
 	for spellID, opts in pairs(NugRunningConfigMerged[category]) do
-		if not NugRunningConfigMerged.spellClones[spellID] then
+		if not NugRunningConfigMerged.spellClones[spellID] or category == "event_timers" then
 			if (isGlobal and opts.global) or (not isGlobal and not opts.global) then
 				local name = (opts.name == "" or not opts.name) and (GetSpellInfo(spellID) or "Unknown") or opts.name
 				local custom_opts = custom[category] and custom[category][spellID]
@@ -93,7 +94,7 @@ function NugRunningGUI.CreateNewTimerForm(self)
 	end
 
 	local newspell = AceGUI:Create("Button")
-	newspell:SetText("New Spell")
+	newspell:SetText(L"New Spell")
 	newspell:SetFullWidth(true)
 	newspell:SetCallback("OnClick", function(self, event)
 		self.parent:ShowNewTimer("spells")
@@ -102,7 +103,7 @@ function NugRunningGUI.CreateNewTimerForm(self)
     Form.controls.newspell = newspell
 
 	local newcooldown = AceGUI:Create("Button")
-	newcooldown:SetText("New Cooldown")
+	newcooldown:SetText(L"New Cooldown")
 	newcooldown:SetFullWidth(true)
 	newcooldown:SetCallback("OnClick", function(self, event)
 		self.parent:ShowNewTimer("cooldowns")
@@ -111,7 +112,7 @@ function NugRunningGUI.CreateNewTimerForm(self)
 	Form.controls.newcooldown = newcooldown
 
 	local newitemcooldown = AceGUI:Create("Button")
-	newitemcooldown:SetText("New Item Cooldown")
+	newitemcooldown:SetText(L"New Item Cooldown")
 	newitemcooldown:SetFullWidth(true)
 	newitemcooldown:SetCallback("OnClick", function(self, event)
 		self.parent:ShowNewTimer("itemcooldowns")
@@ -120,7 +121,7 @@ function NugRunningGUI.CreateNewTimerForm(self)
     Form.controls.newitemcooldown = newitemcooldown
 
 	local newcast = AceGUI:Create("Button")
-	newcast:SetText("New Cast")
+	newcast:SetText(L"New Cast")
 	newcast:SetFullWidth(true)
 	newcast:SetCallback("OnClick", function(self, event)
 		self.parent:ShowNewTimer("casts")
@@ -129,7 +130,7 @@ function NugRunningGUI.CreateNewTimerForm(self)
 	Form.controls.newcast = newcast
 
 	local newevent = AceGUI:Create("Button")
-	newevent:SetText("New Event Timer")
+	newevent:SetText(L"New Event Timer")
 	newevent:SetFullWidth(true)
 	newevent:SetCallback("OnClick", function(self, event)
 		self.parent:ShowNewTimer("event_timers")
@@ -170,7 +171,7 @@ function NugRunningGUI.CreateCommonForm(self)
 
 
 	local save = AceGUI:Create("Button")
-	save:SetText("Save")
+	save:SetText(L"Save")
 	save:SetRelativeWidth(0.5)
 	save:SetCallback("OnClick", function(self, event)
 		local p = self.parent
@@ -248,16 +249,6 @@ function NugRunningGUI.CreateCommonForm(self)
 		local delta = CopyTable(opts)
 		delta.timer = nil -- important, clears runtime data
 
-		if not default_opts then
-			local lastRankID
-			if delta.clones then
-				lastRankID = delta.clones[#delta.clones]
-			else
-				lastRankID = spellID
-			end
-			NugRunning.AddSpellNameRecognition(lastRankID)
-		end
-
 		-- remove clones of the previous version of the spell
 		local oldOriginalSpell = NugRunningConfigMerged[category][spellID]
 		if oldOriginalSpell and oldOriginalSpell.clones then
@@ -281,6 +272,8 @@ function NugRunningGUI.CreateCommonForm(self)
 			NugRunningConfigMerged[category][spellID] = delta
 		end
 
+		NugRunning:UpdateSpellNameToIDTable()
+
 		-- fill up spell clones of the new version
 		local originalSpell = NugRunningConfigMerged[category][spellID]
 		if originalSpell.clones then
@@ -302,7 +295,7 @@ function NugRunningGUI.CreateCommonForm(self)
 	Form:AddChild(save)
 
 	local delete = AceGUI:Create("Button")
-	delete:SetText("Delete")
+	delete:SetText(L"Delete")
 	save:SetRelativeWidth(0.45)
 	delete:SetCallback("OnClick", function(self, event)
 		local p = self.parent
@@ -322,7 +315,7 @@ function NugRunningGUI.CreateCommonForm(self)
 	Form:AddChild(delete)
 
 	local spellID = AceGUI:Create("EditBox")
-	spellID:SetLabel("Spell ID")
+	spellID:SetLabel(L"Spell ID")
 	spellID:SetDisabled(true)
     spellID:DisableButton(true)
 	spellID:SetRelativeWidth(0.2)
@@ -342,7 +335,7 @@ function NugRunningGUI.CreateCommonForm(self)
 	Form:AddChild(spellID)
 
 	local disabled = AceGUI:Create("CheckBox")
-	disabled:SetLabel("Disabled")
+	disabled:SetLabel(L"Disabled")
 	disabled:SetRelativeWidth(0.4)
 	disabled:SetCallback("OnValueChanged", function(self, event, value)
         if value == false then value = nil end
@@ -354,7 +347,7 @@ function NugRunningGUI.CreateCommonForm(self)
 	Form:AddChild(disabled)
 
 	local short = AceGUI:Create("EditBox")
-	short:SetLabel("Short Name")
+	short:SetLabel(L"Short Name")
 	-- short:SetFullWidth(true)
 	short:SetRelativeWidth(0.29)
 	short:SetCallback("OnEnterPressed", function(self, event, value)
@@ -371,7 +364,7 @@ function NugRunningGUI.CreateCommonForm(self)
     AddTooltip(short, "Shortened label, overrides full name")
 
 	local name = AceGUI:Create("EditBox")
-	name:SetLabel("Name")
+	name:SetLabel(L"Name")
 	-- name:SetFullWidth(true)
 	name:SetRelativeWidth(0.5)
 	name:SetCallback("OnEnterPressed", function(self, event, value)
@@ -383,7 +376,7 @@ function NugRunningGUI.CreateCommonForm(self)
     AddTooltip(name, "Custom timer label.\nLeave blank to hide.")
 
 	local duration = AceGUI:Create("EditBox")
-	duration:SetLabel("Duration")
+	duration:SetLabel(L"Duration")
 	duration:SetDisabled(true)
 	duration:SetRelativeWidth(0.19)
     duration:DisableButton(true)
@@ -401,7 +394,7 @@ function NugRunningGUI.CreateCommonForm(self)
     AddTooltip(duration, "Duration to fallback to when it can't be retrieved from unit (very rare)")
 
 	local fixedlen = AceGUI:Create("EditBox")
-	fixedlen:SetLabel("|cff00ff00Fixed Duration|r")
+	fixedlen:SetLabel(L"Fixed Duration")
 	fixedlen:SetRelativeWidth(0.2)
     fixedlen:DisableButton(true)
 	fixedlen:SetCallback("OnTextChanged", function(self, event, value)
@@ -415,11 +408,11 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.fixedlen = fixedlen
 	Form:AddChild(fixedlen)
-    AddTooltip(fixedlen, "Set static timer max duration to align timer decay speed with other timers")
+    AddTooltip(fixedlen, L"Set static timer max duration to align timer decay speed with other timers")
 
 
 	local prio = AceGUI:Create("EditBox")
-	prio:SetLabel("|cff55ff55Priority|r")
+	prio:SetLabel(L"Priority")
 	-- prio:SetFullWidth(true)
 	prio:SetRelativeWidth(0.15)
     prio:DisableButton(true)
@@ -438,7 +431,7 @@ function NugRunningGUI.CreateCommonForm(self)
     AddTooltip(prio, "Positive or negative numeric value.\nDefault priority is 0.\nTimers with equal priority sorted by remaining time.")
 
 	local group = AceGUI:Create("Dropdown")
-	group:SetLabel("Group")
+	group:SetLabel(L"Group")
 
     local groupList = {
         default = "Default"
@@ -453,14 +446,11 @@ function NugRunningGUI.CreateCommonForm(self)
     --         end
     --     end
 	-- end
-	for anchor, opts in pairs(NugRunning.db.anchors) do
-        for i, group in ipairs(opts.groups) do
-            local name = group.name
-            if name ~= "player" and name ~= "target" and name ~= "offtargets" then
-                groupList[name] = name
-                table.insert(groupOrder, name)
-            end
-        end
+	for name, group in pairs(NugRunning.db.groups) do
+		if name ~= "player" and name ~= "target" and name ~= "offtargets" then
+			groupList[name] = name
+			table.insert(groupOrder, name)
+		end
     end
 
 
@@ -472,10 +462,10 @@ function NugRunningGUI.CreateCommonForm(self)
 	-- group:SetHeight(32)
 	Form.controls.group = group
 	Form:AddChild(group)
-    AddTooltip(group, "Assign to timer group")
+    AddTooltip(group, L"Assign to timer group")
 
 	local scale = AceGUI:Create("Slider")
-	scale:SetLabel("Scale")
+	scale:SetLabel(L"Scale")
 	scale:SetSliderValues(0.3, 2, 0.05)
 	scale:SetRelativeWidth(0.30)
 	scale:SetCallback("OnValueChanged", function(self, event, value)
@@ -489,10 +479,10 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.scale = scale
 	Form:AddChild(scale)
-    AddTooltip(scale, "Vertical timer scale")
+    AddTooltip(scale, L"Vertical timer scale")
 
 	local scale_until = AceGUI:Create("EditBox")
-	scale_until:SetLabel("Minimize Until")
+	scale_until:SetLabel(L"Minimize Until")
 	scale_until:SetRelativeWidth(0.22)
     scale_until:DisableButton(true)
 	scale_until:SetCallback("OnTextChanged", function(self, event, value)
@@ -506,10 +496,10 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.scale_until = scale_until
 	Form:AddChild(scale_until)
-    AddTooltip(scale_until, "Minimize until duration is less than X")
+    AddTooltip(scale_until, L"Minimize until duration is less than X")
 
 	local color = AceGUI:Create("ColorPicker")
-	color:SetLabel("Color")
+	color:SetLabel(L"Color")
 	color:SetRelativeWidth(0.20)
 	color:SetHasAlpha(false)
 	color:SetCallback("OnValueConfirmed", function(self, event, r,g,b,a)
@@ -519,7 +509,7 @@ function NugRunningGUI.CreateCommonForm(self)
 	Form:AddChild(color)
 
 	local color2 = AceGUI:Create("ColorPicker")
-	color2:SetLabel("End Color")
+	color2:SetLabel(L"End Color")
 	color2:SetRelativeWidth(0.20)
 	color2:SetHasAlpha(false)
 	color2:SetCallback("OnValueConfirmed", function(self, event, r,g,b,a)
@@ -527,7 +517,7 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.color2 = color2
 	Form:AddChild(color2)
-    AddTooltip(color2, "if present, timer color shifts from base color to end color as it's progressing")
+    AddTooltip(color2, L"if present, timer color shifts from base color to end color as it's progressing")
 
 	local c2r = AceGUI:Create("Button")
 	c2r:SetText("X")
@@ -538,10 +528,10 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.c2r = c2r
 	Form:AddChild(c2r)
-    AddTooltip(c2r, "Remove End Color")
+    AddTooltip(c2r, L"Remove End Color")
 
 	local arrow = AceGUI:Create("ColorPicker")
-	arrow:SetLabel("Highlight")
+	arrow:SetLabel(L"Highlight")
 	arrow:SetRelativeWidth(0.20)
 	arrow:SetHasAlpha(false)
 	arrow:SetCallback("OnValueConfirmed", function(self, event, r,g,b,a)
@@ -549,7 +539,7 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.arrow = arrow
 	Form:AddChild(arrow)
-    AddTooltip(arrow, "Timer highlight mark color")
+    AddTooltip(arrow, L"Timer highlight mark color")
 
 	local ar = AceGUI:Create("Button")
 	ar:SetText("X")
@@ -560,11 +550,11 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.ar = ar
 	Form:AddChild(ar)
-    AddTooltip(ar, "Remove Highlight Color")
+    AddTooltip(ar, L"Remove Highlight Color")
 
     local hide_until = AceGUI:Create("EditBox")
-    hide_until:SetLabel("Hide Until")
-    hide_until:SetRelativeWidth(0.14)
+    hide_until:SetLabel(L"Hide Until")
+    hide_until:SetRelativeWidth(0.17)
     hide_until:DisableButton(true)
     hide_until:SetCallback("OnTextChanged", function(self, event, value)
         local v = tonumber(value)
@@ -577,12 +567,12 @@ function NugRunningGUI.CreateCommonForm(self)
     end)
     Form.controls.hide_until = hide_until
     Form:AddChild(hide_until)
-	AddTooltip(hide_until, "Hide until duration is less than X\n(Only for cooldowns)")
+	AddTooltip(hide_until, L"Hide until duration is less than X\n(Only for cooldowns)")
 
 
 
 	local ghost = AceGUI:Create("EditBox")
-    ghost:SetLabel("Ghost")
+    ghost:SetLabel(L"Ghost")
     ghost:SetRelativeWidth(0.17)
     ghost:DisableButton(true)
     ghost:SetCallback("OnTextChanged", function(self, event, value)
@@ -597,43 +587,43 @@ function NugRunningGUI.CreateCommonForm(self)
     end)
     Form.controls.ghost = ghost
     Form:AddChild(ghost)
-    AddTooltip(ghost, "Timer remains for X seconds after expiring")
+    AddTooltip(ghost, L"Timer remains for X seconds after expiring")
 
 	local preghost = AceGUI:Create("CheckBox")
-	preghost:SetLabel("PreGhost")
+	preghost:SetLabel(L"PreGhost")
 	preghost:SetRelativeWidth(0.24)
 	preghost:SetCallback("OnValueChanged", function(self, event, value)
 		self.parent.opts["preghost"] = value
 	end)
 	Form.controls.preghost = preghost
 	Form:AddChild(preghost)
-    AddTooltip(preghost, "Create empty bar when switching to target without existing timer")
+    AddTooltip(preghost, L"Create empty bar when switching to target without existing timer")
 
 	local shine = AceGUI:Create("CheckBox")
-	shine:SetLabel("Shine")
-	shine:SetRelativeWidth(0.20)
+	shine:SetLabel(L"Shine")
+	shine:SetRelativeWidth(0.24)
 	shine:SetCallback("OnValueChanged", function(self, event, value)
 		self.parent.opts["shine"] = value
 	end)
 	Form.controls.shine = shine
 	Form:AddChild(shine)
-    AddTooltip(shine, "Shine when created")
+    AddTooltip(shine, L"Shine when created")
 
 	local shinerefresh = AceGUI:Create("CheckBox")
-	shinerefresh:SetLabel("On Refresh")
-	shinerefresh:SetRelativeWidth(0.27)
+	shinerefresh:SetLabel(L"On Refresh")
+	shinerefresh:SetRelativeWidth(0.24)
 	shinerefresh:SetCallback("OnValueChanged", function(self, event, value)
 		self.parent.opts["shinerefresh"] = value
 	end)
 	Form.controls.shinerefresh = shinerefresh
 	Form:AddChild(shinerefresh)
-    AddTooltip(shinerefresh, "Shine when refreshed")
+    AddTooltip(shinerefresh, L"Shine when refreshed")
 
 
 
 
 	local maxtimers = AceGUI:Create("EditBox")
-	maxtimers:SetLabel("Max Timers")
+	maxtimers:SetLabel(L"Max Timers")
 	maxtimers:SetRelativeWidth(0.25)
     maxtimers:DisableButton(true)
 	maxtimers:SetCallback("OnTextChanged", function(self, event, value)
@@ -651,11 +641,11 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.maxtimers = maxtimers
 	Form:AddChild(maxtimers)
-    AddTooltip(maxtimers, "Maximum amount of timers that can exist.\nUsed to prevent spam.")
+    AddTooltip(maxtimers, L"Maximum amount of timers that can exist.\nUsed to prevent spam.")
 
 
 	local singleTarget = AceGUI:Create("CheckBox")
-	singleTarget:SetLabel("Single-Target")
+	singleTarget:SetLabel(L"Single-Target")
 	singleTarget:SetRelativeWidth(0.3)
 	singleTarget:SetCallback("OnValueChanged", function(self, event, value)
 		self.parent.opts["singleTarget"] = value
@@ -668,10 +658,10 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.singleTarget = singleTarget
 	Form:AddChild(singleTarget)
-    AddTooltip(singleTarget, "Timer is only displayed if it's on the current target or you have no other target.\nUsed to prevent spam.")
+    AddTooltip(singleTarget, L"Timer is only displayed if it's on the current target or you have no other target.\nUsed to prevent spam.")
 
 	local multiTarget = AceGUI:Create("CheckBox")
-	multiTarget:SetLabel("Multi-Target")
+	multiTarget:SetLabel(L"Multi-Target")
 	multiTarget:SetRelativeWidth(0.3)
 	multiTarget:SetCallback("OnValueChanged", function(self, event, value)
 		self.parent.opts["multiTarget"] = value
@@ -684,11 +674,11 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.multiTarget = multiTarget
 	Form:AddChild(multiTarget)
-    AddTooltip(multiTarget, "For AoE debuffs, condensing timers from multiple targets into one.\nUsed to prevent spam.")
+    AddTooltip(multiTarget, L"For AoE debuffs, condensing timers from multiple targets into one.\nUsed to prevent spam.")
 
 
 	local affiliation = AceGUI:Create("Dropdown")
-	affiliation:SetLabel("Affiliation")
+	affiliation:SetLabel(L"Affiliation")
 	affiliation:SetList({
 		[COMBATLOG_OBJECT_AFFILIATION_MINE] = "Player",
 		[COMBATLOG_OBJECT_AFFILIATION_PARTY_OR_RAID] = "Raid",
@@ -701,23 +691,23 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.affiliation = affiliation
 	Form:AddChild(affiliation)
-    AddTooltip(affiliation, "Limit events to self/raid/everyone")
+    AddTooltip(affiliation, L"Limit events to self/raid/everyone")
 
 	local nameplates = AceGUI:Create("CheckBox")
-	nameplates:SetLabel("Show on Nameplates")
+	nameplates:SetLabel(L"Show on Nameplates")
 	nameplates:SetRelativeWidth(0.56)
 	nameplates:SetCallback("OnValueChanged", function(self, event, value)
 		self.parent.opts["nameplates"] = value
 	end)
 	Form.controls.nameplates = nameplates
 	Form:AddChild(nameplates)
-    AddTooltip(nameplates, "Mirror timer on nameplates.\nMay need /reload to enable nameplate functionality.")
+    AddTooltip(nameplates, L"Mirror timer on nameplates.\nMay need /reload to enable nameplate functionality.")
 
 
 
 
 	local overlay_start = AceGUI:Create("EditBox")
-	overlay_start:SetLabel("Overlay Start")
+	overlay_start:SetLabel(L"Overlay Start")
 	overlay_start:SetRelativeWidth(0.20)
     -- overlay_start:DisableButton(true)
 	overlay_start:SetCallback("OnEnterPressed", function(self, event, value)
@@ -743,10 +733,10 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.overlay_start = overlay_start
 	Form:AddChild(overlay_start)
-    AddTooltip(overlay_start, "Overlay marks time intervals.\nSpecial values:\ngcd\ntick")
+    AddTooltip(overlay_start, L"Overlay marks time intervals.\nSpecial values:".."\ngcd\ntick")
 
 	local overlay_end = AceGUI:Create("EditBox")
-	overlay_end:SetLabel("Overlay End")
+	overlay_end:SetLabel(L"Overlay End")
 	overlay_end:SetRelativeWidth(0.20)
     -- overlay_end:DisableButton(true)
 	overlay_end:SetCallback("OnEnterPressed", function(self, event, value)
@@ -772,10 +762,10 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.overlay_end = overlay_end
 	Form:AddChild(overlay_end)
-    AddTooltip(overlay_end, "Overlay marks time intervals.\nSpecial values:\ntickend\nend")
+    AddTooltip(overlay_end, L"Overlay marks time intervals.\nSpecial values:".."\ntickend\nend")
 
 	local overlay_haste = AceGUI:Create("CheckBox")
-	overlay_haste:SetLabel("Haste Reduced")
+	overlay_haste:SetLabel(L"Haste Reduced")
 	overlay_haste:SetDisabled(true)
 	overlay_haste:SetRelativeWidth(0.3)
 	overlay_haste:SetCallback("OnValueChanged", function(self, event, value)
@@ -787,11 +777,11 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.overlay_haste = overlay_haste
 	Form:AddChild(overlay_haste)
-	AddTooltip(overlay_haste, "Overlay length is reduced by haste.")
+	AddTooltip(overlay_haste, L"Overlay length is reduced by haste.")
 
 
 	local pandemic = AceGUI:Create("Button")
-	pandemic:SetText("Pandemic")
+	pandemic:SetText(L"Pandemic")
 	pandemic:SetDisabled(true)
 	pandemic:SetRelativeWidth(0.25)
 	pandemic:SetCallback("OnClick", function(self, event)
@@ -806,14 +796,14 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.pandemic = pandemic
 	Form:AddChild(pandemic)
-	AddTooltip(pandemic, "Calculate pandemic overlay from duration")
+	AddTooltip(pandemic, L"Calculate pandemic overlay from duration")
 
 		----------------------------------
 	--- STACKCOLOR
 	----------------------------------
 
 	local useStackcolor = AceGUI:Create("CheckBox")
-	useStackcolor:SetLabel("Color By Stack")
+	useStackcolor:SetLabel(L"Color By Stack")
 	useStackcolor:SetRelativeWidth(0.3)
 	useStackcolor:SetCallback("OnValueChanged", function(self, event, value)
 		if value == false then
@@ -840,7 +830,6 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.useStackcolor = useStackcolor
 	Form:AddChild(useStackcolor)
-    AddTooltip(useStackcolor, "Shine when created")
 
 	local AddStackColor = function(i)
 		local stc1 = AceGUI:Create("ColorPicker")
@@ -865,7 +854,7 @@ function NugRunningGUI.CreateCommonForm(self)
 	----------------------------------
 
 	local tick = AceGUI:Create("EditBox")
-	tick:SetLabel("Tick")
+	tick:SetLabel(L"Tick")
 	tick:SetRelativeWidth(0.15)
     tick:DisableButton(true)
 	tick:SetCallback("OnTextChanged", function(self, event, value)
@@ -881,11 +870,11 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.tick = tick
 	Form:AddChild(tick)
-    AddTooltip(tick, "Tick length.\nLeave empty to disable ticks.\nMutually exclusive with recast mark.")
+    AddTooltip(tick, L"Tick length.\nLeave empty to disable ticks.\nMutually exclusive with recast mark.")
 
 	local recast_mark = AceGUI:Create("EditBox")
-	recast_mark:SetLabel("Recast Mark")
-	recast_mark:SetRelativeWidth(0.18)
+	recast_mark:SetLabel(L"Recast Mark")
+	recast_mark:SetRelativeWidth(0.15)
     recast_mark:DisableButton(true)
 	recast_mark:SetCallback("OnTextChanged", function(self, event, value)
 		local v = tonumber(value)
@@ -900,7 +889,7 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.recast_mark = recast_mark
 	Form:AddChild(recast_mark)
-    AddTooltip(recast_mark, "Place mark on a timer, that will shine when passed through")
+    AddTooltip(recast_mark, L"Place mark on a timer, that will shine when passed through")
 
 
 
@@ -914,7 +903,7 @@ function NugRunningGUI.CreateCommonForm(self)
     end
 
     local effect = AceGUI:Create("Dropdown")
-    effect:SetLabel("3D Effect")
+    effect:SetLabel(L"3D Effect")
     effect:SetList(effectsList, effectsOrder)
     effect:SetRelativeWidth(0.32)
     effect:SetCallback("OnValueChanged", function(self, event, value)
@@ -922,10 +911,10 @@ function NugRunningGUI.CreateCommonForm(self)
     end)
     Form.controls.effect = effect
     Form:AddChild(effect)
-    AddTooltip(effect, "Show 3D effect near timer")
+    AddTooltip(effect, L"Show 3D effect near timer")
 
     local ghosteffect = AceGUI:Create("Dropdown")
-    ghosteffect:SetLabel("Ghost 3D Effect")
+    ghosteffect:SetLabel(L"Ghost 3D Effect")
     ghosteffect:SetList(effectsList, effectsOrder)
     ghosteffect:SetRelativeWidth(0.32)
     ghosteffect:SetCallback("OnValueChanged", function(self, event, value)
@@ -933,10 +922,10 @@ function NugRunningGUI.CreateCommonForm(self)
     end)
     Form.controls.ghosteffect = ghosteffect
     Form:AddChild(ghosteffect)
-	AddTooltip(ghosteffect, "Effect during ghost phase")
+	AddTooltip(ghosteffect, L"Effect during ghost phase")
 
 	local glowtime = AceGUI:Create("EditBox")
-	glowtime:SetLabel("Glow At")
+	glowtime:SetLabel(L"Glow At")
 	glowtime:SetRelativeWidth(0.15)
     glowtime:DisableButton(true)
 	glowtime:SetCallback("OnTextChanged", function(self, event, value)
@@ -950,10 +939,10 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.glowtime = glowtime
 	Form:AddChild(glowtime)
-    AddTooltip(glowtime, "Time when timer starts glowing")
+    AddTooltip(glowtime, L"Time when timer starts glowing")
 
 	local glow2time = AceGUI:Create("EditBox")
-	glow2time:SetLabel("Spin At")
+	glow2time:SetLabel(L"Spin At")
 	glow2time:SetRelativeWidth(0.15)
     glow2time:DisableButton(true)
 	glow2time:SetCallback("OnTextChanged", function(self, event, value)
@@ -967,10 +956,10 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.glow2time = glow2time
 	Form:AddChild(glow2time)
-	AddTooltip(glow2time, "Time when highlight starts spinning.\n(Requires highlight color enabled)")
+	AddTooltip(glow2time, L"Time when highlight starts spinning.\n(Requires highlight color enabled)")
 
 	local effecttime = AceGUI:Create("EditBox")
-	effecttime:SetLabel("Effect At")
+	effecttime:SetLabel(L"Effect At")
 	effecttime:SetRelativeWidth(0.20)
     effecttime:DisableButton(true)
 	effecttime:SetCallback("OnTextChanged", function(self, event, value)
@@ -984,20 +973,20 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.effecttime = effecttime
 	Form:AddChild(effecttime)
-	AddTooltip(effecttime, "Time when 3D effect starts being shown")
+	AddTooltip(effecttime, L"Time when 3D effect starts being shown")
 
 	local timeless = AceGUI:Create("CheckBox")
-	timeless:SetLabel("Infinite Timer")
+	timeless:SetLabel(L"Infinite Timer")
 	timeless:SetRelativeWidth(0.9)
 	timeless:SetCallback("OnValueChanged", function(self, event, value)
 		self.parent.opts["timeless"] = value
 	end)
 	Form.controls.timeless = timeless
 	Form:AddChild(timeless)
-    AddTooltip(timeless, "Create empty bar when switching to target without existing timer")
+    AddTooltip(timeless, L"Marks bar as infinite, for spells with indefinite duration.")
 
 	local clones = AceGUI:Create("EditBox")
-	clones:SetLabel("Additional Spell IDs")
+	clones:SetLabel(L"Additional Spell IDs")
 	clones:SetRelativeWidth(0.9)
 	clones:SetCallback("OnEnterPressed", function(self, event, value)
 		local cloneList = {}
@@ -1013,10 +1002,10 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.clones = clones
 	Form:AddChild(clones)
-	AddTooltip(clones, "Spell ID list of clones / spell ranks" )
+	AddTooltip(clones, L"Spell ID list of clones / spell ranks" )
 
 	local event = AceGUI:Create("EditBox")
-	event:SetLabel("Combat Log Event")
+	event:SetLabel(L"Combat Log Event")
 	event:SetRelativeWidth(0.9)
 	event:SetCallback("OnEnterPressed", function(self, event, value)
 		if value == "" then
@@ -1027,7 +1016,7 @@ function NugRunningGUI.CreateCommonForm(self)
 	end)
 	Form.controls.event = event
 	Form:AddChild(event)
-    AddTooltip(event, "Combat Log Event to track for a given ID. Ex:\n- SPELL_CAST_SUCCESS\n- SPELL_SUMMON" )
+    AddTooltip(event, L"Combat Log Event to track for a given ID. Ex:".."\n- SPELL_CAST_SUCCESS\n- SPELL_SUMMON" )
 
     -- Frame:AddChild(Form)
     -- Frame.top = Form
@@ -1150,13 +1139,13 @@ function NugRunningGUI.FillForm(self, Form, class, category, id, opts, isEmptyFo
 
 	if id and not NugRunningConfig[category][id] then
 		controls.delete:SetDisabled(false)
-		controls.delete:SetText("Delete")
+		controls.delete:SetText(L"Delete")
 	elseif NugRunningConfigCustom[class] and  NugRunningConfigCustom[class][category] and NugRunningConfigCustom[class][category][id] then
 		controls.delete:SetDisabled(false)
-		controls.delete:SetText("Restore")
+		controls.delete:SetText(L"Restore")
 	else
 		controls.delete:SetDisabled(true)
-		controls.delete:SetText("Restore")
+		controls.delete:SetText(L"Restore")
 	end
 
 
@@ -1202,9 +1191,9 @@ function NugRunningGUI.FillForm(self, Form, class, category, id, opts, isEmptyFo
 	end
 
 	if category == "itemcooldowns" then
-		controls.spellID:SetLabel("Item ID")
+		controls.spellID:SetLabel(L"Item ID")
 	else
-		controls.spellID:SetLabel("Spell ID")
+		controls.spellID:SetLabel(L"Spell ID")
 	end
 
 end
@@ -1225,7 +1214,7 @@ function NugRunningGUI.Create(self, name, parent )
 
 	local Frame = AceGUI:Create("BlizOptionsGroup")
 	Frame:SetName(name, parent)
-	Frame:SetTitle("NugRunning Spell List")
+	Frame:SetTitle(L"NugRunning Spell List")
 	Frame:SetLayout("Fill")
 	-- Frame:SetHeight(500)
 	-- Frame:SetWidth(700)
@@ -1361,7 +1350,7 @@ function NugRunningGUI.Create(self, name, parent )
 		local t = {
 			{
 				value = "GLOBAL",
-				text = "Global",
+				text = L"Global",
 				icon = "Interface\\Icons\\spell_holy_resurrection",
 				children = {
 					{
@@ -1471,7 +1460,7 @@ end
 local function MakeGeneralOptions()
     local opt = {
         type = 'group',
-        name = "NugRunning Settings",
+        name = L"NugRunning Settings",
         order = 1,
         args = {
             -- charspec = {
@@ -1490,12 +1479,12 @@ local function MakeGeneralOptions()
             -- },
             anchors = {
                 type = "group",
-                name = "Anchors",
+                name = L"Anchors",
                 guiInline = true,
                 order = 1,
                 args = {
                     unlock = {
-                        name = "Unlock",
+                        name = L"Unlock",
                         type = "execute",
                         -- width = "half",
                         desc = "Unlock anchor for dragging",
@@ -1503,7 +1492,7 @@ local function MakeGeneralOptions()
                         order = 1,
                     },
                     lock = {
-                        name = "Lock",
+                        name = L"Lock",
                         type = "execute",
                         -- width = "half",
                         desc = "Lock anchor",
@@ -1511,7 +1500,7 @@ local function MakeGeneralOptions()
                         order = 2,
                     },
                     reset = {
-                        name = "Reset",
+                        name = L"Reset",
                         type = "execute",
                         desc = "Reset anchor",
                         func = function() NugRunning.Commands.reset() end,
@@ -1527,7 +1516,7 @@ local function MakeGeneralOptions()
                 args = {
 					texture = {
 						type = "select",
-						name = "Texture",
+						name = L"Texture",
 						order = 0.5,
 						desc = "Set the statusbar texture.",
 						get = function(info) return NugRunning.db.textureName end,
@@ -1539,7 +1528,7 @@ local function MakeGeneralOptions()
 						dialogControl = "LSM30_Statusbar",
 					},
                     width = {
-                        name = "Width",
+                        name = L"Width",
                         type = "range",
                         get = function(info) return NugRunning.db.width end,
                         set = function(info, v)
@@ -1554,7 +1543,7 @@ local function MakeGeneralOptions()
                         order = 1,
                     },
                     height = {
-                        name = "Height",
+                        name = L"Height",
                         type = "range",
                         get = function(info) return NugRunning.db.height end,
                         set = function(info, v)
@@ -1569,7 +1558,7 @@ local function MakeGeneralOptions()
                         order = 2,
                     },
                     growth = {
-                        name = "Growth Direction",
+                        name = L"Growth Direction",
                         type = 'select',
                         order = 3,
                         values = {
@@ -1590,13 +1579,13 @@ local function MakeGeneralOptions()
             },
             nameplate_sizeSettings = {
                 type = "group",
-                name = "Nameplate Bars",
+                name = L"Nameplate Bars",
                 guiInline = true,
                 order = 3,
                 args = {
 					texture = {
 						type = "select",
-						name = "Texture",
+						name = L"Texture",
 						order = 0.5,
 						desc = "Set the statusbar texture.",
 						get = function(info) return NugRunning.db.nptextureName end,
@@ -1608,7 +1597,7 @@ local function MakeGeneralOptions()
 						dialogControl = "LSM30_Statusbar",
 					},
                     width = {
-                        name = "Nameplate Width",
+                        name = L"Nameplate Width",
                         type = "range",
                         get = function(info) return NugRunning.db.np_width end,
                         set = function(info, v)
@@ -1621,7 +1610,7 @@ local function MakeGeneralOptions()
                         order = 1,
                     },
                     height = {
-                        name = "Nameplate Height",
+                        name = L"Nameplate Height",
                         type = "range",
                         get = function(info) return NugRunning.db.np_height end,
                         set = function(info, v)
@@ -1634,7 +1623,7 @@ local function MakeGeneralOptions()
                         order = 2,
                     },
                     xoffset = {
-                        name = "Nameplate X Offset",
+                        name = L"Nameplate X Offset",
                         type = "range",
                         get = function(info) return NugRunning.db.np_xoffset end,
                         set = function(info, v)
@@ -1647,7 +1636,7 @@ local function MakeGeneralOptions()
                         order = 3,
                     },
                     yoffset = {
-                        name = "Nameplate Y Offset",
+                        name = L"Nameplate Y Offset",
                         type = "range",
                         get = function(info) return NugRunning.db.np_yoffset end,
                         set = function(info, v)
@@ -1663,13 +1652,13 @@ local function MakeGeneralOptions()
 			},
 			fonts = {
                 type = "group",
-                name = "Fonts",
+                name = L"Fonts",
                 guiInline = true,
                 order = 6,
                 args = {
                     namefont = {
 						type = "select",
-						name = "Name Font",
+						name = L"Name Font",
 						order = 1,
 						get = function(info) return NugRunning.db.nameFont.font end,
 						set = function(info, value)
@@ -1680,7 +1669,7 @@ local function MakeGeneralOptions()
 						dialogControl = "LSM30_Font",
 					},
 					nameSize = {
-                        name = "Name Size",
+                        name = L"Name Size",
                         type = "range",
                         get = function(info) return NugRunning.db.nameFont.size end,
                         set = function(info, v)
@@ -1693,7 +1682,7 @@ local function MakeGeneralOptions()
                         order = 2,
 					},
 					nameAlpha = {
-                        name = "Name Alpha",
+                        name = L"Name Alpha",
                         type = "range",
 						get = function(info) return NugRunning.db.nameFont.alpha end,
 						set = function(info, v)
@@ -1708,7 +1697,7 @@ local function MakeGeneralOptions()
 
 					timefont = {
 						type = "select",
-						name = "Time Font",
+						name = L"Time Font",
 						order = 4,
 						get = function(info) return NugRunning.db.timeFont.font end,
 						set = function(info, value)
@@ -1719,7 +1708,7 @@ local function MakeGeneralOptions()
 						dialogControl = "LSM30_Font",
 					},
 					timeSize = {
-                        name = "Time Size",
+                        name = L"Time Size",
                         type = "range",
                         get = function(info) return NugRunning.db.timeFont.size end,
                         set = function(info, v)
@@ -1732,7 +1721,7 @@ local function MakeGeneralOptions()
                         order = 5,
 					},
 					timeAlpha = {
-                        name = "Time Alpha",
+                        name = L"Time Alpha",
                         type = "range",
 						get = function(info) return NugRunning.db.timeFont.alpha end,
 						set = function(info, v)
@@ -1747,7 +1736,7 @@ local function MakeGeneralOptions()
 
 					stackfont = {
 						type = "select",
-						name = "Stack Font",
+						name = L"Stack Font",
 						order = 7,
 						get = function(info) return NugRunning.db.stackFont.font end,
 						set = function(info, value)
@@ -1758,7 +1747,7 @@ local function MakeGeneralOptions()
 						dialogControl = "LSM30_Font",
 					},
 					stackSize = {
-                        name = "Stack Size",
+                        name = L"Stack Size",
                         type = "range",
                         get = function(info) return NugRunning.db.stackFont.size end,
                         set = function(info, v)
@@ -1771,7 +1760,7 @@ local function MakeGeneralOptions()
                         order = 8,
 					},
 					stackAlpha = {
-                        name = "Stack Alpha",
+                        name = L"Stack Alpha",
                         type = "range",
 						get = function(info) return NugRunning.db.stackFont.alpha end,
 						set = function(info, v)
@@ -1787,39 +1776,39 @@ local function MakeGeneralOptions()
 			},
             timerOptions = {
                 type = "group",
-                name = "Timers",
+                name = L"Timers",
                 guiInline = true,
                 order = 1.2,
                 args = {
 
                     spellText = {
-                        name = "Show Spell Names",
+                        name = L"Show Spell Names",
                         type = "toggle",
-                        desc = "Display spell name on timers",
+                        desc = L"Display spell name on timers",
                         get = function(info) return NugRunning.db.spellTextEnabled end,
                         set = function(info, v) NugRunning.db.spellTextEnabled = not NugRunning.db.spellTextEnabled end,
                         order = 1,
                     },
                     localNames = {
-                        name = "Localized Spell Names",
+                        name = L"Localized Spell Names",
                         type = "toggle",
-                        desc = "Ignore custom names and always show native spell names",
+                        desc = L"Ignore custom names and always show native spell names",
                         get = function(info) return NugRunning.db.localNames end,
                         set = function(info, v) NugRunning.db.localNames = not NugRunning.db.localNames end,
                         order = 2,
                     },
                     misses = {
-                        name = "Misses",
+                        name = L"Misses",
                         type = "toggle",
-                        desc = "Show short notification when spell is resisted/missed",
+                        desc = L"Show short notification when spell is resisted/missed",
                         get = function(info) return NugRunning.db.missesEnabled end,
                         set = function(info, v) NugRunning.db.missesEnabled = not NugRunning.db.missesEnabled end,
                         order = 3,
                     },
                     nameplates = {
-                        name = "Nameplate Timers",
+                        name = L"Nameplate Timers",
                         type = "toggle",
-                        desc = "Mirror flagged spell timers on nameplates",
+                        desc = L"Mirror flagged spell timers on nameplates",
                         confirm = true,
 						confirmText = "Warning: Requires UI reloading.",
                         get = function(info) return NugRunning.db.nameplates end,
@@ -1830,24 +1819,24 @@ local function MakeGeneralOptions()
                         order = 4,
                     },
 					cooldowns = {
-                        name = "Cooldowns",
+                        name = L"Cooldowns",
                         type = "toggle",
                         get = function(info) return NugRunning.db.cooldownsEnabled end,
                         set = function(info, v) NugRunning.Commands.cooldowns() end,
                         order = 6,
                     },
                     totems = {
-                        name = "Totems",
+                        name = L"Totems",
                         type = "toggle",
-                        desc = "Display timers for totems (or other similar summons)",
+                        desc = L"Display timers for totems (or other similar summons)",
                         get = function(info) return NugRunning.db.totems end,
                         set = function(info, v) NugRunning.db.totems = not NugRunning.db.totems end,
                         order = 7,
 					},
 					swapTargets = {
-                        name = "Fixed Target Group",
+                        name = L"Fixed Target Group",
                         type = "toggle",
-                        desc = "Switch between target indicator or fixed position",
+                        desc = L"Switch between target indicator or fixed position",
                         get = function(info) return NugRunning.db.swapTarget end,
 						set = function(info, v)
 							NugRunning.db.swapTarget = not NugRunning.db.swapTarget
@@ -1859,10 +1848,10 @@ local function MakeGeneralOptions()
                 },
             },
             debug = {
-                name = "Toggle Combat Log Data",
+                name = L"Toggle Combat Log Data",
                 type = "execute",
                 width = "double",
-                desc = "Print occurring combat log events in chat",
+                desc = L"Print occurring combat log events in chat",
                 func = function() NugRunning.Commands.debug() end,
                 order = 7,
             },
@@ -1888,11 +1877,18 @@ local function MakeHelp()
         order = 1,
         args = {
 			msg = {
-				name = "NugRunning provides commands to list spellIDs of all current auras.\n/nrun listauras target\n/nrun listauras player\n/nrun debug - toggle combat log event display in chat\nSpell ID next to SPELL_CAST_SUCCESS is the one to use for cooldowns",
+				name = L"NugRunning provides commands to list spellIDs of all current auras.\n/nrun listauras target\n/nrun listauras player\n/nrun debug - toggle combat log event display in chat\nSpell ID next to SPELL_CAST_SUCCESS is the one to use for cooldowns\nWoW Classic doesn't have spell IDs in combat log",
 				type = "description",
 				fontSize = "medium",
                 width = "full",
                 order = 1,
+			},
+			msg2 = {
+				name = L"To move timer groups to different anchors use '/nrun groupset' command. /nrun help for more info",
+				type = "description",
+				fontSize = "medium",
+                width = "full",
+                order = 2,
             },
 		},
 	}

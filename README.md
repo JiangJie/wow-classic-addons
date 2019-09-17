@@ -30,6 +30,8 @@ v1.13.2怀旧服
 - [WeakAuras](https://www.curseforge.com/wow/addons/weakauras-2) 包含的功能较多，还没用明白。
 - [WeaponSwingTimer](https://www.curseforge.com/wow/addons/weaponswingtimer) 平A主副手武器CD监控。
 - [WhatsTraining](https://www.wowinterface.com/downloads/info25031-WhatsTraining.html) 技能书增加一个tab，告诉你哪些技能什么等级可学，不用造访技能训练师就能知道，方便练级时使用。
+- [TradeSkillMaster](https://www.curseforge.com/wow/addons/tradeskill-master) 奸商利器。
+- [ElvUI](https://www.tukui.org/welcome.php) 很火的一套完整UI框架。
 
 ## 其他待增加的插件
 
@@ -37,7 +39,6 @@ v1.13.2怀旧服
 - [ ] 聊天增强，增加各频道快速发言快捷键
 - [ ] 技能成功打断喊话
 - [ ] 背包排序整理
-- [ ] TSM(TradeSkillMaster)奸商利器
 - [ ] 鼠标目标增强
 - [ ] 伤害统计
 - [ ] DBM副本工具

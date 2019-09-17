@@ -69,8 +69,8 @@ function EZJunkMixin:InternalAttachItemValueTooltip(tooltip, checkStack)
 				end
 			end
 
-			local totalValue = itemInfo.SellPrice * stackCount;
-			local displayValue = GetCoinTextureString(totalValue);
+			local totalValue = itemInfo.SellPrice * (type(stackCount) == "number" and stackCount or 1);
+			--local displayValue = GetCoinTextureString(totalValue);
 			
 			SetTooltipMoney(tooltip, totalValue, nil, format("%s:", SELL_PRICE));
 		end
